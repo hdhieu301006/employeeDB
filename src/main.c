@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <getopt.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "file.h"
@@ -20,6 +21,8 @@ int main(int argc, char *argv[]) {
     int c;
 
     int dbfd = -1;
+    struct dbheader_t *dbhdr = NULL;
+
 
     while ((c = getopt(argc, argv, "nf:")) != -1) {
         switch (c) {
@@ -30,10 +33,10 @@ int main(int argc, char *argv[]) {
                 filepath = optarg;
                 break;
             case '?':
-                printf("Unknown option -%c\n", c);
-                break;
+                print_usage(argv);
+                return STATUS_ERROR;
             default:
-                return -1;      
+                return STATUS_ERROR;      
         }
     }
 
@@ -41,22 +44,38 @@ int main(int argc, char *argv[]) {
         printf("Filepath is a required argument\n");
         print_usage(argv);
 
-        return 0;
+        return STATUS_ERROR;
     }
 
     if (newfile) {
         dbfd = create_db_file(filepath);
         if (dbfd == STATUS_ERROR) {
-            printf("Unable to create database file\n");
+            return STATUS_ERROR;
+        }
+
+        if (create_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
+            printf("Failed to create database header\n");
+            close(dbfd);
             return -1;
         }
     } else {
         dbfd = open_db_file(filepath);
         if (dbfd == STATUS_ERROR) {
-            printf("Unable to open database file\n");
+            return STATUS_ERROR;
+        }
+
+        if (validate_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
+            printf("Failed to validate database header\n");
+            close(dbfd);
             return -1;
         }
     }
 
-    return 0;
+    if (output_file(dbfd, dbhdr) == STATUS_ERROR) {
+        printf("Failed to write database\n");
+    }
+    
+    free(dbhdr);
+    close(dbfd);
+    return STATUS_SUCCESS;
 }
