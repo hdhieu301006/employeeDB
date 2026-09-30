@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
         if (create_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
             printf("Failed to create database header\n");
             close(dbfd);
-            return -1;
+            return STATUS_ERROR;
         }
     } else {
         dbfd = open_db_file(filepath);
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
         if (validate_db_header(dbfd, &dbhdr) == STATUS_ERROR) {
             printf("Failed to validate database header\n");
             close(dbfd);
-            return -1;
+            return STATUS_ERROR;
         }
     }
 
