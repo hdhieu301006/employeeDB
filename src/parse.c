@@ -113,26 +113,37 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
     return STATUS_SUCCESS;
 }
 
-int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
-    if (!dbhdr || !employees || !addstring) return STATUS_ERROR;
-
+int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *addstring) {
+    if (!dbhdr || !employees || !addstring) {
+        return STATUS_ERROR;
+    }
     char *name = strtok(addstring, ",");
     char *addr = strtok(NULL, ",");
     char *hours = strtok(NULL, ",");
 
     if (!name || !addr || !hours) {
-        printf("Malformed add string. Expected: \"name,address,hours\"\n");
         return STATUS_ERROR;
     }
+    
+    struct employee_t *new_employees = *employees;
+    new_employees = realloc(*employees, sizeof(struct employee_t) * (dbhdr->count+1));
+    if (new_employees == NULL) {
+        perror("realloc");
+        return STATUS_ERROR;
+    }
+    
+    *employees = new_employees;
+    dbhdr->count++;
 
     int idx = dbhdr->count - 1;
-    strncpy(employees[idx].name, name, sizeof(employees[idx].name) - 1);
-    employees[idx].name[sizeof(employees[idx].name) - 1] = '\0';
 
-    strncpy(employees[idx].address, addr, sizeof(employees[idx].address) - 1);
-    employees[idx].address[sizeof(employees[idx].address) - 1] = '\0';
+    strncpy(new_employees[idx].name, name, sizeof(new_employees[idx].name) - 1);
+    new_employees[idx].name[sizeof(new_employees[idx].name) - 1] = '\0';
 
-    employees[idx].hours = (unsigned int)atoi(hours);
+    strncpy(new_employees[idx].address, addr, sizeof(new_employees[idx].address) - 1);
+    new_employees[idx].address[sizeof(new_employees[idx].address) - 1] = '\0';
+
+    new_employees[idx].hours = (unsigned int)atoi(hours);
 
     return STATUS_SUCCESS;
 }

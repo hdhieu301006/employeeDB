@@ -13,6 +13,7 @@ void print_usage(char *argv[]) {
     printf("\t -n - create new database file\n");
     printf("\t -f - (required) path to database file\n");
     printf("\t -a - add employee: \"name, address,hours\"\n");
+    printf("\t -l - list the employees\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -75,7 +76,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (read_employees(dbfd, dbhdr, &employees) == STATUS_ERROR) {
-            printf("Failed to read employees");
+            printf("Failed to read employees\n");
             close(dbfd);
             free(dbhdr);
             return STATUS_ERROR;
@@ -83,17 +84,8 @@ int main(int argc, char *argv[]) {
     }
 
     if (addstring) {
-        dbhdr->count++;
-        struct employee_t *temp = realloc(employees, dbhdr->count*(sizeof(struct employee_t)));
-        if (temp == NULL) {
-            perror("realloc");
-            free(employees);
-            free(dbhdr);
-            close(dbfd);
-            return STATUS_ERROR;
-        }
-        employees = temp;
-        if (add_employee(dbhdr, employees, addstring)) {
+       if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
+            printf("Failed to add employees\n");
             free(employees);
             free(dbhdr);
             close(dbfd);
