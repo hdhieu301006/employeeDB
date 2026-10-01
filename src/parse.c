@@ -53,13 +53,13 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     header->filesize = ntohl(header->filesize);
 
     if (header->magic != HEADER_MAGIC) {
-        printf("Improper header magic\n");
+        printf("Improper header magic.\n");
         free(header);
         return STATUS_ERROR;
     }
 
     if (header->version != 1) {
-        printf("Improper header version\n");
+        printf("Improper header version.\n");
         free(header);
         return STATUS_ERROR;
     }
@@ -72,7 +72,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
     }
 
     if (header->filesize != dbstat.st_size) {
-        printf("Corrupted database\n");
+        printf("Corrupted database.\n");
         free(header);
         return STATUS_ERROR;
     }
@@ -117,11 +117,13 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *
     if (!dbhdr || !employees || !addstring) {
         return STATUS_ERROR;
     }
+
     char *name = strtok(addstring, ",");
     char *addr = strtok(NULL, ",");
     char *hours = strtok(NULL, ",");
 
     if (!name || !addr || !hours) {
+        printf("Malformed add string. Expected: \"name,address,hours\"\n");
         return STATUS_ERROR;
     }
     
@@ -186,15 +188,42 @@ void find_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char 
         }
     }
 
-    printf("Employee '%s' is not found\n", target_name);
+    printf("Employee '%s' is not found.\n", target_name);
     return;
 }
 
-//int update_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *updatestring) {
-//    if (!dbhdr || !employees || !updatestring) {
-//        return STATUS_ERROR;
-//    }    
-//}
+int update_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *updatestring) {
+    if (!dbhdr || !updatestring) {
+        return STATUS_ERROR;
+    }
+
+    if (dbhdr->count == 0 || !employees) {
+        printf("Database is empty.\n");
+    }
+
+    char *name = strtok(updatestring, ",");
+    char *addr = strtok(NULL, ",");
+    char *hours = strtok(NULL, ",");
+
+    if (!name || !addr || !hours) {
+        printf("Malformed update string. Expected: \"name,address,hours\"\n");
+        return STATUS_ERROR;
+    }
+
+    for (int i = 0; i < dbhdr->count; i++) {
+        if (strcmp(employees[i].name, name) == 0) {
+            strncpy(employees[i].address, addr, sizeof(employees[i].address) - 1);
+            employees[i].address[sizeof(employees[i].address) - 1] = '\0';
+
+            employees[i].hours = (unsigned int)atoi(hours);
+
+            return STATUS_SUCCESS;
+        }
+    }
+
+    printf("Employee '%s' is not found for update.\n", name);
+    return STATUS_ERROR;
+}
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
 	if (fd < 0 || !dbhdr) {

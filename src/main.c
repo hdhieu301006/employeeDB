@@ -9,18 +9,22 @@
 #include "parse.h"
 
 void print_usage(char *argv[]) {
-    printf("Usage: %s -f <database file> [-n] [-a <employee_data>]\n", argv[0]);
-    printf("\t -n - create new database file\n");
-    printf("\t -f - (required) path to database file\n");
-    printf("\t -a - add employee: \"name, address,hours\"\n");
-    printf("\t -l - list all employees\n");
-    printf("\t -s - search employee by name\n");
+    printf("Usage: %s -f <database file> [options]\n", argv[0]);
+    printf("Options:\n");
+    printf("\t -n                  Create new database file\n");
+    printf("\t -f <file>           (Required) path to database file\n");
+    printf("\t -a <name,addr,hrs>  Add employee\n");
+    printf("\t -l                  List all employees\n");
+    printf("\t -s <name>           Search employee by name\n");
+    printf("\t -u <name,addr,hrs>  Update employee info\n");
+    printf("\t -d <name>           Delete employee by name\n");
 }
 
 int main(int argc, char *argv[]) {
     char *filepath = NULL;
     char *addstring = NULL;
     char *search_name = NULL;
+    char *updatestring = NULL;
     bool newfile = false;
     bool list = false;
     int c;
@@ -29,7 +33,7 @@ int main(int argc, char *argv[]) {
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:ls:")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:ls:u:")) != -1) {
         switch (c) {
             case 'n':
                 newfile = true;
@@ -45,6 +49,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 's':
                 search_name = optarg;
+                break;
+            case 'u':
+                updatestring = optarg;
                 break;
             case '?':
                 print_usage(argv);
@@ -108,6 +115,16 @@ int main(int argc, char *argv[]) {
 
     if (search_name) {
         find_employee(dbhdr, employees, search_name);
+    }
+
+    if (updatestring) {
+        if (update_employee(dbhdr, employees, updatestring) == STATUS_ERROR) {
+            printf("Failed to update employees\n");
+            free(employees);
+            free(dbhdr);
+            close(dbfd);
+            return STATUS_ERROR;
+        }
     }
 
     if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
