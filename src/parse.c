@@ -166,6 +166,36 @@ void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {
     }
 }
 
+void find_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *target_name) {
+    if (!dbhdr || !target_name) {
+        return;
+    }
+
+    if (dbhdr->count == 0 || !employees) {
+        printf("Database is empty.\n");
+        return;
+    }
+
+    for (int i = 0; i < dbhdr->count; i++) {
+        if (strcmp(employees[i].name, target_name) == 0) {
+            printf("Found employee %d\n", i);
+            printf("\tName: %s\n", employees[i].name);
+            printf("\tAddress: %s\n", employees[i].address);
+            printf("\tHours: %u\n", employees[i].hours);
+            return;
+        }
+    }
+
+    printf("Employee '%s' is not found\n", target_name);
+    return;
+}
+
+//int update_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *updatestring) {
+//    if (!dbhdr || !employees || !updatestring) {
+//        return STATUS_ERROR;
+//    }    
+//}
+
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
 	if (fd < 0 || !dbhdr) {
        return STATUS_ERROR;

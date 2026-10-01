@@ -13,12 +13,14 @@ void print_usage(char *argv[]) {
     printf("\t -n - create new database file\n");
     printf("\t -f - (required) path to database file\n");
     printf("\t -a - add employee: \"name, address,hours\"\n");
-    printf("\t -l - list the employees\n");
+    printf("\t -l - list all employees\n");
+    printf("\t -s - search employee by name\n");
 }
 
 int main(int argc, char *argv[]) {
     char *filepath = NULL;
     char *addstring = NULL;
+    char *search_name = NULL;
     bool newfile = false;
     bool list = false;
     int c;
@@ -27,7 +29,7 @@ int main(int argc, char *argv[]) {
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:l")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:ls:")) != -1) {
         switch (c) {
             case 'n':
                 newfile = true;
@@ -40,6 +42,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'l':
                 list = true;
+                break;
+            case 's':
+                search_name = optarg;
                 break;
             case '?':
                 print_usage(argv);
@@ -101,8 +106,16 @@ int main(int argc, char *argv[]) {
         list_employees(dbhdr, employees);
     }
 
+    if (search_name) {
+        find_employee(dbhdr, employees, search_name);
+    }
+
     if (output_file(dbfd, dbhdr, employees) == STATUS_ERROR) {
         printf("Failed to write database\n");
+        free(employees);
+        free(dbhdr);
+        close(dbfd);
+        return STATUS_ERROR;
     }
     
     free(employees);
