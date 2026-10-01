@@ -25,6 +25,7 @@ int main(int argc, char *argv[]) {
     char *addstring = NULL;
     char *search_name = NULL;
     char *updatestring = NULL;
+    char *delete_name = NULL;
     bool newfile = false;
     bool list = false;
     int c;
@@ -33,7 +34,7 @@ int main(int argc, char *argv[]) {
     struct dbheader_t *dbhdr = NULL;
     struct employee_t *employees = NULL;
 
-    while ((c = getopt(argc, argv, "nf:a:ls:u:")) != -1) {
+    while ((c = getopt(argc, argv, "nf:a:ls:u:d:")) != -1) {
         switch (c) {
             case 'n':
                 newfile = true;
@@ -52,6 +53,9 @@ int main(int argc, char *argv[]) {
                 break;
             case 'u':
                 updatestring = optarg;
+                break;
+            case 'd':
+                delete_name = optarg;
                 break;
             case '?':
                 print_usage(argv);
@@ -101,7 +105,7 @@ int main(int argc, char *argv[]) {
 
     if (addstring) {
         if (add_employee(dbhdr, &employees, addstring) == STATUS_ERROR) {
-            printf("Failed to add employees\n");
+            printf("Failed to add employee\n");
             free(employees);
             free(dbhdr);
             close(dbfd);
@@ -119,7 +123,17 @@ int main(int argc, char *argv[]) {
 
     if (updatestring) {
         if (update_employee(dbhdr, employees, updatestring) == STATUS_ERROR) {
-            printf("Failed to update employees\n");
+            printf("Failed to update employee\n");
+            free(employees);
+            free(dbhdr);
+            close(dbfd);
+            return STATUS_ERROR;
+        }
+    }
+
+    if (delete_name) {
+        if (delete_employee(dbhdr, &employees, delete_name) == STATUS_ERROR) {
+            printf("Failed to delete employee\n");
             free(employees);
             free(dbhdr);
             close(dbfd);

@@ -1,1 +1,1 @@
-# This is a readme file
+# A (very) simple DB with CRUD functionalities

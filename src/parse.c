@@ -127,8 +127,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *
         return STATUS_ERROR;
     }
     
-    struct employee_t *new_employees = *employees;
-    new_employees = realloc(*employees, sizeof(struct employee_t) * (dbhdr->count+1));
+    struct employee_t *new_employees = realloc(*employees, sizeof(struct employee_t) * (dbhdr->count+1));
     if (new_employees == NULL) {
         perror("realloc");
         return STATUS_ERROR;
@@ -199,6 +198,7 @@ int update_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char
 
     if (dbhdr->count == 0 || !employees) {
         printf("Database is empty.\n");
+        return STATUS_ERROR;
     }
 
     char *name = strtok(updatestring, ",");
@@ -223,6 +223,51 @@ int update_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char
 
     printf("Employee '%s' is not found for update.\n", name);
     return STATUS_ERROR;
+}
+
+int delete_employee(struct dbheader_t *dbhdr, struct employee_t **employees, char *target_name) {
+    if (!dbhdr || !employees || !target_name) {
+        return STATUS_ERROR;
+    }
+    
+    if (dbhdr->count == 0 || !*employees) {
+        printf("Database is empty.\n");
+        return STATUS_ERROR;
+    }
+
+    int found_idx = -1;
+    for (int i = 0; i < dbhdr->count; i++) {
+        if (strcmp((*employees)[i].name, target_name) == 0) {
+            found_idx = i;
+            break;     
+        }
+    }
+
+    if (found_idx == -1) {
+        printf("Employee '%s' is not found for deletion.\n", target_name);
+        return STATUS_ERROR;
+    }
+
+    for (int i = found_idx; i < dbhdr->count - 1; i++) {
+        (*employees)[i] = (*employees)[i+1];
+    }
+
+    dbhdr->count--;
+
+    if (dbhdr->count == 0) {
+        free(*employees);
+        *employees = NULL;
+    } else {
+        struct employee_t *temp = realloc(*employees, dbhdr->count * sizeof(struct employee_t));
+        if (temp == NULL) {
+            perror("realloc");
+            dbhdr->count++;
+            return STATUS_ERROR;
+        }
+        *employees = temp;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
@@ -258,6 +303,11 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
         }
     }
 
+    if (ftruncate(fd, dbhdr->filesize) == -1) {
+        perror("ftruncate");
+        return STATUS_ERROR;
+    }
+    
     return STATUS_SUCCESS;
 }	
 
