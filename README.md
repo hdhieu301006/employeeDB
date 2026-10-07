@@ -1,1 +1,1 @@
-# A (very) simple DB with CRUD functionalities
+# A simple DB with CRUD + network functionalities
